@@ -1,0 +1,78 @@
+﻿body {
+    display: -ms-grid;
+    -ms-grid-rows: auto 1fr;
+    -ms-grid-columns: 1fr;
+}
+
+.rulerBox {
+    height: auto;
+}
+
+#edgeRuler {
+    overflow-x: auto;
+}
+
+    #edgeRuler .ruler {
+        margin-bottom: 20px;
+    }
+
+    #edgeRuler .label {
+        color: rgba(0, 0, 0, 0.63);
+        text-align: right;
+        margin-right: 5px;
+        margin-top: 60px;
+    }
+
+
+#touchCanvas {
+    -ms-grid-row: 2;
+}
+
+#touchCanvas.howTo {
+    background-image: url(/images/howtoimg.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+
+}
+
+#floatRuler {
+    -ms-transform-origin: 0% 50%;
+    display: -ms-grid;
+    -ms-grid-rows: auto auto;
+    -ms-grid-columns: auto;
+}
+
+
+    #floatRuler .ruler {
+        -ms-grid-row: 1;
+        background-color: magenta;
+    }
+
+
+    #floatRuler .label {
+        -ms-grid-row: 2;
+        color:  rgba(255, 255, 255, 0.63);
+        text-align: right;
+    }
+
+
+.ruler {
+    background-color: yellow;
+    display: -ms-flexbox;
+    height: 100%;
+    background-image: url(/images/tickmarks.png);
+}
+
+
+
+.label {
+    font-family: 'segoe ui light';
+    font-size: 20pt;
+}
+
+
+#calibrationTips {
+    font-size: 9pt;
+    color: grey;
+}
