@@ -6,6 +6,7 @@
     var nativePPI;
     var logicalPPI;
     var screenSize = 13;
+    var defaultRulerSizeInches = 4;
 
     var pointers = [];
     var rulerHeight = 120;
@@ -20,9 +21,12 @@
             WinJS.UI.SettingsFlyout.populateSettings(e);
         };
 
-        touchCanvas.onpointerdown = pointerDown;
-        touchCanvas.onpointermove = updateFloatRuler;
-        touchCanvas.onpointerup = pointerUp;
+        var floatRuler = document.getElementById("floatRuler");
+        floatRuler.addEventListener("MSGestureChange", touchHandler);
+        floatRuler.addEventListener("MSPointerDown", downHandler);
+        floatRuler.addEventListener("wheel", onMouseWheel, false);
+        floatRuler.addEventListener("MSGestureEnd", onGestureEnd, false);
+        floatRuler.addEventListener("dragstart", function (e) { e.preventDefault(); }, false);
 
         loadDisplayInfo();
         window.onresize = loadDisplayInfo;
@@ -39,54 +43,15 @@
         updateSettingsInfo(screenSize);
 
         createRuler(100, edgeRuler, true);
+        createRuler(defaultRulerSizeInches, floatRuler);
+        updateFloatRulerLabel(defaultRulerSizeInches);
     }
 
     function updateSettingsInfo(screenSize) {
         screenSizeLabel.innerText = screenSize.toFixed(1) + " inches";
     }
 
-    function pointerDown(e) {
-        pointers.push(e);
-        updateFloatRuler();
-
-        if (!window.localStorage.noTutorial && pointers.length >= 2) {
-            WinJS.Utilities.removeClass(touchCanvas, "howTo");
-            window.localStorage.noTutorial = true;
-        }
-
-    }
-
-    function pointerUp(e) {
-        pointers.splice(pointers.indexOf(e), 1);
-    }
-
-    function updateFloatRuler() {
-        if (pointers.length >= 2 && pointers[0].currentPoint.isInContact && pointers[1].currentPoint.isInContact) {
-            var opp = pointers[1].currentPoint.position.y - pointers[0].currentPoint.position.y;
-            var adj = pointers[1].currentPoint.position.x - pointers[0].currentPoint.position.x;
-
-            // The left pointer should always be first
-            if (adj < 0) {
-                pointers = [pointers[1], pointers[0]];
-                opp = pointers[1].currentPoint.position.y - pointers[0].currentPoint.position.y;
-                adj = pointers[1].currentPoint.position.x - pointers[0].currentPoint.position.x;
-            }
-
-            var angleBetweenPoints = Math.atan(opp / adj);
-            var distanceBetweenPoints = opp / Math.sin(angleBetweenPoints) - fingerWidth;
-
-            // #perf
-            requestAnimationFrame(function () {
-                createRuler(distanceBetweenPoints / logicalPPI, floatRuler);
-                updateFloatRulerLabel(distanceBetweenPoints / logicalPPI);
-            });
-
-            floatRuler.style.transform = "translateX(" + (pointers[0].currentPoint.position.x + fingerWidth / 2) + "px) "
-                + "translateY(" + (pointers[0].currentPoint.position.y - (rulerHeight / 2)) + "px) "
-                + "rotate(" + angleBetweenPoints + "rad)";
-        }
-    }
-
+    
     function updateFloatRulerLabel(lengthInInches) {
         var label = document.querySelector("#floatRuler .label");
         label.innerText = lengthInInches.toFixed(2) + " inches";
@@ -116,11 +81,71 @@
                 ruler.appendChild(label);
             }
         }
+    }
 
-
+    function downHandler(eventObject) {
+        var target = getManipulationElement(eventObject.target);
+        target.gestureObject.addPointer(eventObject.pointerId);
+        target.gestureObject.pointerType = eventObject.pointerType;
     }
 
 
+    function onMouseWheel(e) {
+        e.pointerId = 1;
+        downHandler(e);
+    }
+
+    function onGestureEnd(e) {
+        var target = getManipulationElement(e.target);
+        target.gestureObject.pointerType = null;
+    }
+
+    function getManipulationElement(element) {
+        var retValue = element;
+        while (!WinJS.Utilities.hasClass(retValue, "ManipulationElement")) {
+            retValue = retValue.parentNode;
+        }
+
+        if (retValue.scale === null || typeof retValue.scale === "undefined") {
+            retValue.scale = 1;
+        }
+        if (retValue.translationX === null || typeof retValue.translationX === "undefined") {
+            retValue.translationX = 0;
+        }
+        if (retValue.translationY === null || typeof retValue.translationY === "undefined") {
+            retValue.translationY = 0;
+        }
+        if (retValue.rotation === null || typeof retValue.rotation === "undefined") {
+            retValue.rotation = 0;
+        }
+
+        if (retValue.gestureObject === null || typeof retValue.gestureObject === "undefined") {
+            retValue.gestureObject = new MSGesture();
+            retValue.gestureObject.target = retValue;
+        }
+        return retValue;
+    };
+
+    function touchHandler(e) {
+        var target = getManipulationElement(e.target);
+
+        var elt = e.target;
+        var m = new MSCSSMatrix(elt.style.transform);
+        target.scale *= e.scale;
+
+        elt.style.transform = m.
+            translate(e.offsetX, e.offsetY).
+            translate(e.translationX, e.translationY).
+            rotate(e.rotation * 180 / Math.PI).
+            translate(-e.offsetX, -e.offsetY);
+
+        // #perf
+        requestAnimationFrame(function () {
+            createRuler(target.scale * defaultRulerSizeInches, floatRuler);
+            updateFloatRulerLabel(target.scale * defaultRulerSizeInches);
+        });
+
+    }
 
     app.onactivated = function (args) {
         if (args.detail.kind === activation.ActivationKind.launch) {

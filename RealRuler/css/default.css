@@ -6,10 +6,13 @@
 
 .rulerBox {
     height: auto;
+    width: 0px;
+
 }
 
 #edgeRuler {
     overflow-x: auto;
+    width: auto;
 }
 
     #edgeRuler .ruler {
@@ -28,16 +31,9 @@
     -ms-grid-row: 2;
 }
 
-#touchCanvas.howTo {
-    background-image: url(/images/howtoimg.png);
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center center;
-
-}
 
 #floatRuler {
-    -ms-transform-origin: 0% 50%;
+    -ms-transform-origin: 50% 50%;
     display: -ms-grid;
     -ms-grid-rows: auto auto;
     -ms-grid-columns: auto;
