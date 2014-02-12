@@ -35,7 +35,7 @@
     function loadDisplayInfo() {
         var info = Windows.Graphics.Display.DisplayInformation.getForCurrentView();
 
-        if (info.rawDpiX >= 0) {
+        if (info.rawDpiX > 0) {
             nativePPI = info.rawDpiX;
             logicalPPI = nativePPI * 100 / info.resolutionScale;
             var screenSizeX = window.screen.width / logicalPPI;
