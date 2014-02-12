@@ -5,7 +5,7 @@
     var activation = Windows.ApplicationModel.Activation;
     var nativePPI;
     var logicalPPI;
-    var screenSize = 13;
+    var screenSize;
     var defaultRulerSizeInches = 4;
 
     var pointers = [];
@@ -34,11 +34,19 @@
 
     function loadDisplayInfo() {
         var info = Windows.Graphics.Display.DisplayInformation.getForCurrentView();
-        nativePPI = info.rawDpiX;
-        logicalPPI = nativePPI * 100 / info.resolutionScale;
-        var screenSizeX = window.screen.width / logicalPPI;
-        var screenSizeY = window.screen.height / logicalPPI;
-        screenSize = Math.sqrt(screenSizeX * screenSizeX + screenSizeY * screenSizeY);
+
+        if (info.rawDpiX >= 0) {
+            nativePPI = info.rawDpiX;
+            logicalPPI = nativePPI * 100 / info.resolutionScale;
+            var screenSizeX = window.screen.width / logicalPPI;
+            var screenSizeY = window.screen.height / logicalPPI;
+            screenSize = Math.sqrt(screenSizeX * screenSizeX + screenSizeY * screenSizeY);
+
+        } else {
+            // Simulate screen size if unavaliable 
+            nativePPI = 135;
+            logicalPPI = nativePPI;
+        }
 
         updateSettingsInfo(screenSize);
 
@@ -48,7 +56,12 @@
     }
 
     function updateSettingsInfo(screenSize) {
-        screenSizeLabel.innerText = screenSize.toFixed(1) + " inches";
+
+        if (screenSize) {
+            screenSizeLabel.innerText = screenSize.toFixed(1) + " inches";
+        } else {
+            screenSizeLabel.innerText = "Simulated";
+        }
     }
 
     
